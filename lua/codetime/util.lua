@@ -8,20 +8,7 @@ function M.set_interval(interval_ms, callback)
 	return timer
 end
 
-function M.clear_interval(timer)
-	timer:stop()
-	timer:close()
-end
-
-local codetime_group = vim.api.nvim_create_augroup("CodeTime", { clear = true })
-
-local session_codetime = "0h 0m 0s"
-
-function M.get_session_codetime()
-	return session_codetime
-end
-
-function M.setup_autocmds()
+function M.setup_codetime_data()
 	local code_time_data = {}
 	local cache_path = vim.fn.stdpath("cache") .. "/code_time.json"
 
@@ -51,11 +38,42 @@ function M.setup_autocmds()
 		vim.notify_once("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
 	end
 
-	M.start_new_session(code_time_data)
+	M.total_codetime = code_time_data.today.total_time
+
+	require("codetime.util").start_new_session(code_time_data)
+end
+
+function M.clear_interval(timer)
+	timer:stop()
+	timer:close()
+end
+
+local codetime_group = vim.api.nvim_create_augroup("CodeTime", { clear = true })
+
+local session_codetime = "0h 0m 0s"
+
+function M.get_session_codetime()
+	return session_codetime
+end
+
+function M.get_total_codetime()
+	return M.total_codetime
 end
 
 local function format_time(time_table)
 	return string.format("%dh %dm %ds", time_table.h, time_table.m, time_table.s)
+end
+
+function M.normalize_time(time)
+	if time.s >= 60 then
+		time.m = time.m + math.floor(time.s / 60)
+		time.s = time.s % 60
+	end
+	if time.m >= 60 then
+		time.h = time.h + math.floor(time.m / 60)
+		time.m = time.m % 60
+	end
+	return format_time(time)
 end
 
 function M.start_new_session(code_time_data)
@@ -85,16 +103,7 @@ function M.start_new_session(code_time_data)
 			m = session_time.m + tonumber(m)
 			s = session_time.s + tonumber(s)
 
-			if s >= 60 then
-				m = m + math.floor(s / 60)
-				s = s % 60
-			end
-			if m >= 60 then
-				h = h + math.floor(m / 60)
-				m = m % 60
-			end
-
-			code_time_data.today.total_time = format_time({ h = h, m = m, s = s })
+			code_time_data.today.total_time = M.normalize_time({ h = h, m = m, s = s })
 			local json_data = vim.json.encode(code_time_data)
 
 			local file = io.open(cache_path, "w")
