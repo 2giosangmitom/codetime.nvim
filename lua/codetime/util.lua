@@ -23,41 +23,35 @@ end
 
 function M.setup_autocmds()
 	local code_time_data = {}
+	local cache_path = vim.fn.stdpath("cache") .. "/code_time.json"
 
-	vim.api.nvim_create_autocmd("VimEnter", {
-		group = codetime_group,
-		callback = function()
-			local cache_path = vim.fn.stdpath("cache") .. "/code_time.json"
+	if vim.fn.filereadable(cache_path) == 0 then
+		vim.notify_once("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
+		code_time_data.today = {
+			date = vim.fn.strftime("%d-%m-%Y"),
+			total_time = "0h 0m 0s",
+		}
+		local json_data = vim.json.encode(code_time_data)
+		local file = io.open(cache_path, "w")
+		if file then
+			file:write(json_data)
+			file:close()
+		end
+	end
 
-			if vim.fn.filereadable(cache_path) == 0 then
-				vim.notify_once("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
-				code_time_data.today = {
-					date = vim.fn.strftime("%d-%m-%Y"),
-					total_time = "0h 0m 0s",
-				}
-				local json_data = vim.json.encode(code_time_data)
-				local file = io.open(cache_path, "w")
-				if file then
-					file:write(json_data)
-					file:close()
-				end
-			end
+	local json_data = vim.fn.readfile(cache_path)[1]
+	code_time_data = vim.json.decode(json_data)
 
-			local json_data = vim.fn.readfile(cache_path)[1]
-			code_time_data = vim.json.decode(json_data)
+	if code_time_data.today.date ~= vim.fn.strftime("%d-%m-%Y") then
+		code_time_data.today.date = vim.fn.strftime("%d-%m-%Y")
+		code_time_data.today.total_time = "0h 0m 0s"
+	end
 
-			if code_time_data.today.date ~= vim.fn.strftime("%d-%m-%Y") then
-				code_time_data.today.date = vim.fn.strftime("%d-%m-%Y")
-				code_time_data.today.total_time = "0h 0m 0s"
-			end
+	if code_time_data.today.total_time == "0h 0m 0s" then
+		vim.notify_once("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
+	end
 
-			if code_time_data.today.total_time == "0h 0m 0s" then
-				vim.notify_once("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
-			end
-
-			M.start_new_session(code_time_data)
-		end,
-	})
+	M.start_new_session(code_time_data)
 end
 
 local function format_time(time_table)
@@ -91,13 +85,13 @@ function M.start_new_session(code_time_data)
 			m = session_time.m + tonumber(m)
 			s = session_time.s + tonumber(s)
 
-			while s > 60 do
-				m = m + 1
-				s = s - 60
+			if s >= 60 then
+				m = m + math.floor(s / 60)
+				s = s % 60
 			end
-			while m > 60 do
-				h = h + 1
-				m = m - 60
+			if m >= 60 then
+				h = h + math.floor(m / 60)
+				m = m % 60
 			end
 
 			code_time_data.today.total_time = format_time({ h = h, m = m, s = s })
