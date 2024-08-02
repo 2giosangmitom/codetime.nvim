@@ -34,6 +34,21 @@ end
 local session_time = { h = 0, m = 0, s = 0 }
 local session_timer = nil
 
+---@param time string: The time string with format like this "12h 5m 40s"
+---@return number, number, number: The time in hour, minute, second as numbers
+function M.parse_time(time)
+	local h, m, s = time:match("(%d+)h (%d+)m (%d+)s")
+	h = tonumber(h)
+	m = tonumber(m)
+	s = tonumber(s)
+
+	if not h or not m or not s then
+		error("Invalid time format. Expected format: 'Xh Xm Xs'")
+	end
+
+	return h, m, s
+end
+
 function M.start_new_session(code_time_data)
 	M.total_codetime = code_time_data.today.total_time
 	local cache_path = require("codetime").Options.cache_path
@@ -58,11 +73,11 @@ function M.start_new_session(code_time_data)
 		group = codetime_group,
 		callback = function()
 			local total_time = code_time_data.today.total_time
-			local h, m, s = total_time:match("(%d+)h (%d+)m (%d+)s")
+			local h, m, s = M.parse_time(total_time)
 
-			h = session_time.h + tonumber(h)
-			m = session_time.m + tonumber(m)
-			s = session_time.s + tonumber(s)
+			h = session_time.h + h
+			m = session_time.m + m
+			s = session_time.s + s
 
 			code_time_data.today.total_time = M.normalize_time({ h = h, m = m, s = s })
 			local json_data = vim.json.encode(code_time_data)

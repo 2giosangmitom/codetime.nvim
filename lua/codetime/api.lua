@@ -9,13 +9,13 @@ end
 function M.get_total_codetime_today()
 	local total_recorded = util.total_codetime
 	local current_session = M.get_session_codetime()
-	local h1, m1, s1 = total_recorded:match("(%d+)h (%d+)m (%d+)s")
-	local h2, m2, s2 = current_session:match("(%d+)h (%d+)m (%d+)s")
+	local h1, m1, s1 = util.parse_time(total_recorded)
+	local h2, m2, s2 = util.parse_time(current_session)
 
 	local total_time = util.normalize_time({
-		h = tonumber(h1) + tonumber(h2),
-		m = tonumber(m1) + tonumber(m2),
-		s = tonumber(s1) + tonumber(s2),
+		h = h1 + h2,
+		m = m1 + m2,
+		s = s1 + s2,
 	})
 
 	return total_time

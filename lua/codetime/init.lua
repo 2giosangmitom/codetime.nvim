@@ -9,7 +9,7 @@ function M.setup(opts)
 	local cache_path = M.Options.cache_path
 
 	if vim.fn.filereadable(cache_path) == 0 then
-		vim.notify_once("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
+		vim.notify("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
 		code_time_data.today = {
 			date = vim.fn.strftime("%d-%m-%Y"),
 			total_time = "0h 0m 0s",
@@ -26,12 +26,13 @@ function M.setup(opts)
 	end
 
 	if code_time_data.today.date ~= vim.fn.strftime("%d-%m-%Y") then
+		vim.notify("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
 		code_time_data.today.date = vim.fn.strftime("%d-%m-%Y")
 		code_time_data.today.total_time = "0h 0m 0s"
 	end
 
 	if code_time_data.today.total_time == "0h 0m 0s" then
-		vim.notify_once("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
+		vim.notify("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
 	end
 
 	require("codetime.util").start_new_session(code_time_data)
