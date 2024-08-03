@@ -5,19 +5,18 @@ M.options = {}
 ---@param opts table: A table containing user-defined options for configuring the plugin.
 function M.setup(opts)
 	M.options = require("codetime.config").set_config(opts)
+	local util = require("codetime.util")
 
 	local cache_path = M.options.cache_path
-	local code_time_data = require("codetime.util").load_code_time_data(cache_path)
+	local code_time_data = util.load_code_time_data(cache_path)
 
-	if code_time_data.today.date ~= vim.fn.strftime("%d-%m-%Y") then
-		vim.schedule(function()
-			vim.notify("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
-		end)
-		code_time_data.today.date = vim.fn.strftime("%d-%m-%Y")
+	local today_date = vim.fn.strftime("%d-%m-%Y")
+	if code_time_data.today.date ~= today_date then
+		code_time_data.today.date = today_date
 		code_time_data.today.total_time = "0h 0m 0s"
 	end
 
-	require("codetime.util").start_session_tracking(code_time_data, cache_path)
+	util.start_session_tracking(code_time_data, cache_path)
 end
 
 vim.api.nvim_create_user_command("CodeTime", function(opts)
