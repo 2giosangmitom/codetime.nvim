@@ -10,7 +10,9 @@ function M.setup(opts)
 	local code_time_data = require("codetime.util").load_code_time_data(cache_path)
 
 	if code_time_data.today.date ~= vim.fn.strftime("%d-%m-%Y") then
-		vim.notify("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
+		vim.schedule(function()
+			vim.notify("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
+		end)
 		code_time_data.today.date = vim.fn.strftime("%d-%m-%Y")
 		code_time_data.today.total_time = "0h 0m 0s"
 	end

@@ -52,7 +52,9 @@ end
 ---@return table: The loaded coding time data as a Lua table.
 function M.load_code_time_data(cache_path)
 	if vim.fn.filereadable(cache_path) == 0 then
-		vim.notify("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
+		vim.schedule(function()
+			vim.notify("Have a great day!", vim.log.levels.INFO, { title = "codetime.nvim" })
+		end)
 		local initial_data = {
 			today = {
 				date = vim.fn.strftime("%d-%m-%Y"),
